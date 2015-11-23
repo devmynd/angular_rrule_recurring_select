@@ -10,6 +10,14 @@
     Every <input type="text" ng-model="interval" ng-change="calculateRRule()" /> {{selectedFrequency.type}}(s):
   </div>
 
+  <div class="daily" ng-if="selectedFrequency.type == 'day'">
+    <ul>
+      <li ng-repeat="hour in hours" ng-click="toggleSelected(hour)" ng-class="{ selected: hour.selected }">
+        {{hour.name}}
+      </li>
+    </ul>
+  </div>
+
   <div class="weekly" ng-if="selectedFrequency.type == 'week'">
     <ul>
       <li ng-repeat="day in weekDays" ng-click="toggleSelected(day)" ng-class="{ selected: day.selected }">

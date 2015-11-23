@@ -32,7 +32,7 @@
     padding: 0; }
   .rrule-recurring-select .frequency-type, .rrule-recurring-select .interval {
     margin: 8px 0; }
-  .rrule-recurring-select .weekly ul li {
+  .rrule-recurring-select .weekly ul li, .rrule-recurring-select .daily ul li {
     display: inline-block;
     background-color: #ffffff;
     cursor: pointer;
@@ -42,7 +42,7 @@
     font-weight: bold;
     text-align: center;
     border: 1px solid #BBBDBF; }
-    .rrule-recurring-select .weekly ul li.selected {
+    .rrule-recurring-select .weekly ul li.selected, .rrule-recurring-select .daily ul li.selected {
       background-color: #929497; }
   .rrule-recurring-select .monthly.day_of_month {
     height: 198px; }

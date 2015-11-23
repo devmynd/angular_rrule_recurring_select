@@ -95,7 +95,7 @@ describe("ActivityChart Directive", function() {
       });
 
       it("sets up the frequencies", function() {
-        expect(_.pluck(directiveScope.frequencies, 'name')).to.eql(['Daily', 'Weekly', 'Monthly', 'Yearly']);
+        expect(_.pluck(directiveScope.frequencies, 'name')).to.eql(['Hourly', 'Daily', 'Weekly', 'Monthly', 'Yearly']);
       });
 
       it("sets the daily frequency as the default", function() {
@@ -303,6 +303,7 @@ describe("ActivityChart Directive", function() {
 
     describe("#calculateRRule", function() {
       beforeEach(function() {
+        stub(directiveScope, 'calculateHourlyRRule');
         stub(directiveScope, 'calculateDailyRRule');
         stub(directiveScope, 'calculateWeeklyRRule');
         stub(directiveScope, 'calculateMonthlyRRule');
@@ -323,6 +324,18 @@ describe("ActivityChart Directive", function() {
         directiveScope.calculateRRule();
         expect(directiveScope.rule).to.equal(rule.toString());
       });
+
+      describe("hourly", function() {
+        beforeEach(function() {
+          directiveScope.selectedFrequency = { type: 'hour' };
+          directiveScope.calculateRRule();
+        });
+
+        it("calls the hourly calculation function", function() {
+          expect(directiveScope.calculateHourlyRRule.called).to.be.true;
+        });
+      });
+
 
       describe("daily", function() {
         beforeEach(function() {
@@ -421,7 +434,37 @@ describe("ActivityChart Directive", function() {
       });
     });
 
+    describe("#calculateHourlyRRule", function() {
+
+      describe("every hour", function() {
+        beforeEach(function() {
+          directiveScope.recurrenceRule = undefined;
+          directiveScope.interval = '';
+          directiveScope.calculateHourlyRRule();
+        });
+
+        it("has the correct iCal string from RRule", function() {
+          expect(directiveScope.recurrenceRule.toString()).to.eql('FREQ=HOURLY;INTERVAL=1;WKST=SU');
+        });
+      });
+
+      describe("every 2 hours", function() {
+        beforeEach(function() {
+          directiveScope.recurrenceRule = undefined;
+          directiveScope.interval = 2;
+          directiveScope.calculateHourlyRRule();
+        });
+
+        it("has the correct iCal string from RRule", function() {
+          expect(directiveScope.recurrenceRule.toString()).to.eql('FREQ=HOURLY;INTERVAL=2;WKST=SU');
+        });
+      });
+
+    });
+
+
     describe("#calculateDailyRRule", function() {
+
       describe("every day", function() {
         beforeEach(function() {
           directiveScope.recurrenceRule = undefined;
@@ -432,6 +475,7 @@ describe("ActivityChart Directive", function() {
         it("can grab text description from RRule", function() {
           expect(directiveScope.recurrenceRule.toText()).to.eql('every day');
         });
+
 
         it("has the correct iCal string from RRule", function() {
           expect(directiveScope.recurrenceRule.toString()).to.eql('FREQ=DAILY;INTERVAL=1;WKST=SU');
@@ -453,6 +497,21 @@ describe("ActivityChart Directive", function() {
           expect(directiveScope.recurrenceRule.toString()).to.eql('FREQ=DAILY;INTERVAL=2;WKST=SU');
         });
       });
+
+      describe("every day at 10am and 5pm", function() {
+        beforeEach(function() {
+          directiveScope.recurrenceRule = undefined;
+          directiveScope.interval = 1;
+          directiveScope.hours[10].selected = true;
+          directiveScope.hours[17].selected = true;
+          directiveScope.calculateDailyRRule();
+        });
+
+        it("has the correct iCal string from RRule", function() {
+          expect(directiveScope.recurrenceRule.toString()).to.eql('FREQ=DAILY;INTERVAL=1;BYHOUR=10,17;WKST=SU');
+        });
+      });
+
     });
 
     describe("#calculateWeeklyRRule", function() {
@@ -775,6 +834,49 @@ describe("ActivityChart Directive", function() {
 
       });
 
+      describe("hourly", function() {
+        describe("every hour", function() {
+          var iCalString = 'FREQ=HOURLY;INTERVAL=1;WKST=SU';
+
+          beforeEach(function() {
+            directiveScope.parseRule(iCalString);
+          });
+
+          it("sets the recurrenceRule from the ical string", function() {
+            expect(directiveScope.recurrenceRule.toString()).to.eql(iCalString)
+          });
+
+          it("sets the selectedFrequency to 'hourly'", function() {
+            expect(directiveScope.selectedFrequency.type).to.eql('hour');
+          });
+
+          it("sets the interval to 1", function() {
+            expect(directiveScope.interval).to.eql(1);
+          });
+        });
+
+        describe("every 2 hours", function() {
+          var iCalString = 'FREQ=HOURLY;INTERVAL=2;WKST=SU';
+
+          beforeEach(function() {
+            directiveScope.parseRule(iCalString);
+          });
+
+          it("sets the recurrenceRule from the ical string", function() {
+            expect(directiveScope.recurrenceRule.toString()).to.eql(iCalString)
+          });
+
+          it("sets the selectedFrequency to 'hourly'", function() {
+            expect(directiveScope.selectedFrequency.type).to.eql('hour');
+          });
+
+          it("sets the interval to 2", function() {
+            expect(directiveScope.interval).to.eql(2);
+          });
+        });
+      });
+
+
       describe("daily", function() {
         describe("every day", function() {
           var iCalString = 'FREQ=DAILY;INTERVAL=1;WKST=SU';
@@ -815,6 +917,41 @@ describe("ActivityChart Directive", function() {
             expect(directiveScope.interval).to.eql(2);
           });
         });
+
+        describe("every 10:00 and 17:00", function() {
+          var iCalString = 'FREQ=DAILY;INTERVAL=1;WKST=SU;BYHOUR=10,17';
+
+          beforeEach(function() {
+            directiveScope.parseRule(iCalString);
+          });
+
+          it("sets the recurrenceRule from the ical string", function() {
+            expect(directiveScope.recurrenceRule.toString()).to.eql(iCalString)
+          });
+
+          it("sets the selectedFrequency to 'daily'", function() {
+            expect(directiveScope.selectedFrequency.type).to.eql('day');
+          });
+
+          it("sets the interval to 1", function() {
+            expect(directiveScope.interval).to.eql(1);
+          });
+
+          it("sets selected to true for 10 & 17", function() {
+            expect(directiveScope.hours[10].selected).to.be.true;
+            expect(directiveScope.hours[17].selected).to.be.true;
+          });
+
+          it("does not selected to true for hours other than 10 and 17", function() {
+            for (var i=0; i< 24; i++) {
+              if (i !== 10 && i !== 17) {
+                expect(directiveScope.hours[i].selected).to.be.false;
+              }
+            }
+          });
+
+        });
+
       });
 
       describe("weekly", function() {
